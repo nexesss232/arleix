@@ -1,32 +1,13 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
 body {
-  font-family: Arial, sans-serif;
-  background: #0f172a;
+  margin: 0;
   overflow: hidden;
 }
 
-/* 🛍️ SHOP ANIMATION OPEN */
-.shopOpen {
-  animation: shopOpen 0.35s ease forwards;
+@keyframes float {
+  from { opacity: 1; transform: translate(-50%, 0); }
+  to { opacity: 0; transform: translate(-50%, -80px); }
 }
 
-/* 🛍️ SHOP ANIMATION CLOSE */
-.shopClose {
-  animation: shopClose 0.35s ease forwards;
-}
-
-@keyframes shopOpen {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0); }
-}
-
-@keyframes shopClose {
-  from { transform: translateX(0); }
-  to { transform: translateX(-100%); }
+img:active {
+  transform: scale(0.95);
 }
