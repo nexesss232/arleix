@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./supabase";
 
-// 🧠 тимчасовий user id (пізніше замінимо на Telegram)
 const getUserId = () => {
   let id = localStorage.getItem("user_id");
   if (!id) {
@@ -37,23 +36,27 @@ export default function App() {
   }, []);
 
   async function loadPlayer() {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("players")
       .select("*")
       .eq("id", userId)
       .single();
+
+    console.log("LOAD:", data, error);
 
     if (data) {
       setScore(data.score || 0);
       setMult(data.multiplier || 1);
       setUpg(data.upgrades || {});
     } else {
-      await supabase.from("players").insert({
+      const res = await supabase.from("players").upsert({
         id: userId,
         score: 0,
         multiplier: 1,
         upgrades: {},
       });
+
+      console.log("UPSERT NEW:", res);
     }
 
     setLoading(false);
@@ -61,11 +64,12 @@ export default function App() {
 
   // 💾 SAVE PLAYER
   async function savePlayer(newScore, newMult, newUpg) {
-    await supabase.from("players").update({
+    await supabase.from("players").upsert({
+      id: userId,
       score: newScore,
       multiplier: newMult,
       upgrades: newUpg,
-    }).eq("id", userId);
+    });
   }
 
   function addCoin() {
@@ -121,9 +125,7 @@ export default function App() {
             ←
           </button>
 
-          <div style={styles.balance}>
-            🪙 {score}
-          </div>
+          <div style={styles.balance}>🪙 {score}</div>
 
           <h2>🛒 Магазин</h2>
 
