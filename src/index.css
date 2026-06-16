@@ -2,40 +2,31 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-
-  /* 🚫 прибирає синій хітбокс на мобілках */
   -webkit-tap-highlight-color: transparent;
-  outline: none;
 }
 
 body {
-  font-family: system-ui, -apple-system, Arial, sans-serif;
+  font-family: Arial, sans-serif;
   background: #0f172a;
   overflow: hidden;
 }
 
-/* 🧠 прибирає виділення тексту */
-button, img {
-  user-select: none;
-  -webkit-user-select: none;
-  outline: none;
+/* 🛍️ SHOP ANIMATION OPEN */
+.shopOpen {
+  animation: shopOpen 0.35s ease forwards;
 }
 
-/* 🎬 анімації фону */
-@keyframes float1 {
-  0% { transform: translate(0,0); }
-  50% { transform: translate(40px, -30px); }
-  100% { transform: translate(0,0); }
+/* 🛍️ SHOP ANIMATION CLOSE */
+.shopClose {
+  animation: shopClose 0.35s ease forwards;
 }
 
-@keyframes float2 {
-  0% { transform: translate(0,0); }
-  50% { transform: translate(-30px, 40px); }
-  100% { transform: translate(0,0); }
+@keyframes shopOpen {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
 
-@keyframes float3 {
-  0% { transform: translate(0,0); }
-  50% { transform: translate(20px, 30px); }
-  100% { transform: translate(0,0); }
+@keyframes shopClose {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
 }
