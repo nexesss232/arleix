@@ -1,170 +1,53 @@
 import { useEffect, useState } from "react";
-import { supabase } from "./supabase";
-
-const getUserId = () => {
-  let id = localStorage.getItem("user_id");
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem("user_id", id);
-  }
-  return id;
-};
+import Coin from "./components/Coin";
 
 export default function App() {
-  const userId = getUserId();
-
   const [score, setScore] = useState(0);
-  const [mult, setMult] = useState(1);
   const [shopOpen, setShopOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  const [upg, setUpg] = useState({
-    u250: false,
-    u500: false,
-    u1000: false,
-  });
-
-  // 🚫 remove blue highlight
+  // 🚫 прибрати виділення і сині обводки
   useEffect(() => {
     document.body.style.userSelect = "none";
     document.body.style.webkitTapHighlightColor = "transparent";
   }, []);
 
-  // 📥 LOAD PLAYER
-  useEffect(() => {
-    loadPlayer();
-  }, []);
-
-  async function loadPlayer() {
-    const { data, error } = await supabase
-      .from("players")
-      .select("*")
-      .eq("id", userId)
-      .single();
-
-    console.log("LOAD:", data, error);
-
-    if (data) {
-      setScore(data.score || 0);
-      setMult(data.multiplier || 1);
-      setUpg(data.upgrades || {});
-    } else {
-      const res = await supabase.from("players").upsert({
-        id: userId,
-        score: 0,
-        multiplier: 1,
-        upgrades: {},
-      });
-
-      console.log("UPSERT NEW:", res);
-    }
-
-    setLoading(false);
-  }
-
-  // 💾 SAVE PLAYER
-  async function savePlayer(newScore, newMult, newUpg) {
-    await supabase.from("players").upsert({
-      id: userId,
-      score: newScore,
-      multiplier: newMult,
-      upgrades: newUpg,
-    });
-  }
-
+  // ➕ клік по монеті
   function addCoin() {
-    const newScore = score + mult;
-    setScore(newScore);
-    savePlayer(newScore, mult, upg);
+    setScore((prev) => prev + 1);
   }
 
-  function buy(type) {
-    let newScore = score;
-    let newMult = mult;
-    let newUpg = { ...upg };
-
-    if (type === "u250" && score >= 250 && !upg.u250) {
-      newScore -= 250;
-      newMult += 2;
-      newUpg.u250 = true;
-    }
-
-    if (type === "u500" && score >= 500 && !upg.u500) {
-      newScore -= 500;
-      newMult += 1;
-      newUpg.u500 = true;
-    }
-
-    if (type === "u1000" && score >= 1000 && !upg.u1000) {
-      newScore -= 1000;
-      newMult += 3;
-      newUpg.u1000 = true;
-    }
-
-    setScore(newScore);
-    setMult(newMult);
-    setUpg(newUpg);
-
-    savePlayer(newScore, newMult, newUpg);
-  }
-
-  if (loading) {
-    return (
-      <div style={styles.page}>
-        <h2>Loading...</h2>
-      </div>
-    );
-  }
-
-  // 🛒 SHOP
-  if (shopOpen) {
-    return (
-      <div style={styles.page}>
-        <div style={styles.card}>
-          <button onClick={() => setShopOpen(false)} style={styles.back}>
-            ←
-          </button>
-
-          <div style={styles.balance}>🪙 {score}</div>
-
-          <h2>🛒 Магазин</h2>
-
-          {!upg.u250 && (
-            <button onClick={() => buy("u250")} style={styles.btn}>
-              +2 за клік — 250
-            </button>
-          )}
-
-          {!upg.u500 && (
-            <button onClick={() => buy("u500")} style={styles.btn}>
-              +1 за клік — 500
-            </button>
-          )}
-
-          {!upg.u1000 && (
-            <button onClick={() => buy("u1000")} style={styles.btn}>
-              +3 за клік — 1000
-            </button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // 🎮 GAME
   return (
     <div style={styles.page}>
-      <div style={styles.card}>
-        <button onClick={() => setShopOpen(true)} style={styles.shop}>
-          🛒
-        </button>
+      {/* 🛒 кнопка магазину */}
+      <button onClick={() => setShopOpen(true)} style={styles.shopBtn}>
+        🛒
+      </button>
 
-        <div style={styles.score}>{score}</div>
+      {/* 💰 баланс */}
+      <div style={styles.score}>{score}</div>
 
-        <button onClick={addCoin} style={styles.coin}>
-          🪙
-        </button>
-      </div>
+      {/* 🪙 монета */}
+      <Coin onClick={addCoin} />
+
+      {/* 🛍️ простий магазин (поки заглушка) */}
+      {shopOpen && (
+        <div style={styles.shop}>
+          <button onClick={() => setShopOpen(false)} style={styles.close}>
+            ← Назад
+          </button>
+
+          <h2>Магазин</h2>
+          <p>Тут будуть апгрейди</p>
+
+          <button
+            onClick={() => {
+              if (score >= 250) setScore(score - 250);
+            }}
+          >
+            +2 за клік (250)
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -173,66 +56,52 @@ const styles = {
   page: {
     height: "100vh",
     display: "flex",
+    flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(135deg,#1e1e2f,#2c2c54)",
+    background: "linear-gradient(135deg,#0f172a,#1e293b)",
     color: "white",
-    fontFamily: "Arial",
+    position: "relative",
   },
 
-  card: {
-    position: "relative",
-    width: "320px",
-    textAlign: "center",
-    padding: "40px",
-    borderRadius: "20px",
-    background: "rgba(255,255,255,0.05)",
+  score: {
+    fontSize: 48,
+    marginBottom: 20,
+    fontWeight: "bold",
+  },
+
+  shopBtn: {
+    position: "absolute",
+    top: 15,
+    left: 15,
+    fontSize: 24,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    color: "white",
   },
 
   shop: {
     position: "absolute",
-    top: 10,
-    left: 10,
-    border: "none",
-    cursor: "pointer",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    background: "rgba(0,0,0,0.9)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  back: {
+  close: {
     position: "absolute",
-    top: 10,
-    left: 10,
-    fontSize: 22,
+    top: 20,
+    left: 20,
+    fontSize: 20,
     background: "transparent",
     border: "none",
     color: "white",
-    cursor: "pointer",
-  },
-
-  balance: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-  },
-
-  score: {
-    fontSize: 40,
-    marginBottom: 20,
-  },
-
-  coin: {
-    fontSize: 60,
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-  },
-
-  btn: {
-    display: "block",
-    width: "100%",
-    margin: "10px 0",
-    padding: 10,
-    borderRadius: 10,
-    border: "none",
     cursor: "pointer",
   },
 };
