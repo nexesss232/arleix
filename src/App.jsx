@@ -104,11 +104,25 @@ export default function App() {
           </div>
 
           {items.map((i) => (
-            <button key={i.id} style={styles.item} onClick={() => buy(i)}>
-              <span>{i.name}</span>
-              <span>{i.price}💰</span>
-            </button>
-          ))}
+  <button key={i.id} style={styles.item} onClick={() => buy(i)}>
+    
+    <div>
+      <div style={{ fontWeight: "bold" }}>{i.name}</div>
+
+      <div style={{ fontSize: 12, opacity: 0.7 }}>
+        {i.type === "tap" && `+${i.value} за клік`}
+        {i.type === "auto" && `+${i.value}/сек`}
+        {i.type === "multi" && `x${i.value} множник`}
+        {i.type === "crit" && `+${i.value * 100}% крит`}
+        </div>
+      </div>
+
+       <div style={{ fontWeight: "bold" }}>
+         {i.price}💰
+       </div>
+
+    </button>
+    ))}
         </div>
       )}
 
@@ -189,15 +203,15 @@ const styles = {
   },
 
   float: {
-    position: "absolute",
-    top: "45%",
-    left: "50%",
-    transform: "translate(-50%, 0)",
-    fontSize: 34,
-    fontWeight: "bold",
-    color: "#22c55e",
-    textShadow: "0 0 10px rgba(34,197,94,0.8)",
-    animation: "floatUp 0.5s ease forwards",
-    pointerEvents: "none",
+   position: "absolute",
+   top: "45%",
+   left: "50%",
+   transform: "translate(-50%, 0)",
+   fontSize: 34,
+   fontWeight: "bold",
+   color: "#22c55e",
+   textShadow: "0 0 10px rgba(34,197,94,0.8)",
+   animation: "floatUp 0.5s ease forwards",
+   pointerEvents: "none",
   },
 };
