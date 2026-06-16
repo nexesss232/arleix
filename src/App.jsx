@@ -1,54 +1,81 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Coin from "./components/Coin";
+
+const SHOP_ITEMS = [
+  { id: "250", price: 250, bonus: 2 },
+  { id: "500", price: 500, bonus: 1 },
+  { id: "1000", price: 1000, bonus: 3 },
+];
 
 export default function App() {
   const [score, setScore] = useState(0);
   const [mult, setMult] = useState(1);
   const [shopOpen, setShopOpen] = useState(false);
+  const [items, setItems] = useState(SHOP_ITEMS);
+
+  // 💾 LOAD SAVE
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("game"));
+
+    if (saved) {
+      setScore(saved.score);
+      setMult(saved.mult);
+      setItems(saved.items ?? SHOP_ITEMS);
+    }
+  }, []);
+
+  // 💾 SAVE
+  useEffect(() => {
+    localStorage.setItem(
+      "game",
+      JSON.stringify({ score, mult, items })
+    );
+  }, [score, mult, items]);
 
   function addCoin() {
-    setScore((prev) => prev + mult);
+    setScore((p) => p + mult);
   }
 
-  function buy(type) {
-    if (type === "250" && score >= 250) {
-      setScore(score - 250);
-      setMult(mult + 2);
-    }
+  function buy(item) {
+    if (score < item.price) return;
 
-    if (type === "500" && score >= 500) {
-      setScore(score - 500);
-      setMult(mult + 1);
-    }
+    setScore((p) => p - item.price);
+    setMult((p) => p + item.bonus);
 
-    if (type === "1000" && score >= 1000) {
-      setScore(score - 1000);
-      setMult(mult + 3);
-    }
+    // 🧠 прибрати куплений апгрейд
+    setItems((prev) => prev.filter((i) => i.id !== item.id));
+  }
+
+  function closeShop() {
+    const el = document.getElementById("shop");
+    if (!el) return;
+
+    el.classList.add("shopClose");
+
+    setTimeout(() => {
+      setShopOpen(false);
+    }, 350);
   }
 
   return (
     <div style={styles.page}>
 
-      {/* 🌌 BACKGROUND EFFECTS */}
+      {/* 🌌 background */}
       <div style={styles.background}>
         <div style={styles.blob1}></div>
         <div style={styles.blob2}></div>
         <div style={styles.blob3}></div>
       </div>
 
-      {/* 🧱 GAME CARD */}
+      {/* 🧱 game */}
       <div style={styles.card}>
 
-        {/* 🛒 shop button */}
         <button style={styles.shopBtn} onClick={() => setShopOpen(true)}>
           🛒
         </button>
 
-        {/* 💰 score */}
         <div style={styles.score}>{score}</div>
 
-        {/* 🪙 coin */}
         <div style={styles.center}>
           <Coin onClick={addCoin} />
         </div>
@@ -57,26 +84,30 @@ export default function App() {
 
       {/* 🛍️ SHOP */}
       {shopOpen && (
-        <div style={styles.shop}>
-          <button style={styles.close} onClick={() => setShopOpen(false)}>
+        <div id="shop" style={styles.shop}>
+          <button style={styles.close} onClick={closeShop}>
             ←
           </button>
 
           <h2>Магазин</h2>
 
-          <button onClick={() => buy("250")}>+2 за клік — 250</button>
-          <button onClick={() => buy("500")}>+1 за клік — 500</button>
-          <button onClick={() => buy("1000")}>+3 за клік — 1000</button>
+          {items.map((item) => (
+            <button
+              key={item.id}
+              onClick={() => buy(item)}
+              style={styles.shopItem}
+            >
+              +{item.bonus} за клік — {item.price}
+            </button>
+          ))}
         </div>
       )}
-
     </div>
   );
 }
 
 const styles = {
 
-  // 🧠 основа
   page: {
     height: "100vh",
     background: "#0f172a",
@@ -88,53 +119,47 @@ const styles = {
     color: "white",
   },
 
-  // 🌌 фон
   background: {
     position: "absolute",
     inset: 0,
-    overflow: "hidden",
   },
 
   blob1: {
     position: "absolute",
     width: 300,
     height: 300,
-    background: "radial-gradient(circle, #60a5fa, transparent 60%)",
+    background: "radial-gradient(circle, #60a5fa, transparent)",
     top: "10%",
     left: "10%",
     filter: "blur(40px)",
-    animation: "float1 6s ease-in-out infinite",
   },
 
   blob2: {
     position: "absolute",
     width: 250,
     height: 250,
-    background: "radial-gradient(circle, #a78bfa, transparent 60%)",
+    background: "radial-gradient(circle, #a78bfa, transparent)",
     bottom: "10%",
     right: "10%",
     filter: "blur(50px)",
-    animation: "float2 8s ease-in-out infinite",
   },
 
   blob3: {
     position: "absolute",
     width: 200,
     height: 200,
-    background: "radial-gradient(circle, #34d399, transparent 60%)",
+    background: "radial-gradient(circle, #34d399, transparent)",
     top: "50%",
     left: "60%",
     filter: "blur(60px)",
-    animation: "float3 10s ease-in-out infinite",
   },
 
-  // 🧱 картка
   card: {
     width: 360,
     height: 520,
     background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.1)",
     borderRadius: 25,
+    border: "1px solid rgba(255,255,255,0.1)",
     backdropFilter: "blur(12px)",
     position: "relative",
     zIndex: 2,
@@ -143,7 +168,6 @@ const styles = {
     alignItems: "center",
   },
 
-  // 🪙 центр
   center: {
     position: "absolute",
     top: "55%",
@@ -151,7 +175,6 @@ const styles = {
     transform: "translate(-50%, -50%)",
   },
 
-  // 💰 score
   score: {
     position: "absolute",
     top: 15,
@@ -160,7 +183,6 @@ const styles = {
     fontWeight: "bold",
   },
 
-  // 🛒 button
   shopBtn: {
     position: "absolute",
     top: 15,
@@ -168,31 +190,38 @@ const styles = {
     fontSize: 26,
     background: "transparent",
     border: "none",
-    cursor: "pointer",
     color: "white",
+    cursor: "pointer",
   },
 
-  // 🛍️ shop
   shop: {
     position: "absolute",
-    inset: 0,
-    background: "rgba(0,0,0,0.92)",
+    top: 0,
+    left: 0,
+    width: "300px",
+    height: "100%",
+    background: "#111827",
     display: "flex",
     flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 20,
     gap: 10,
-    zIndex: 10,
+    animation: "shopOpen 0.35s ease",
+  },
+
+  shopItem: {
+    padding: 10,
+    background: "#1f2937",
+    border: "none",
+    color: "white",
+    cursor: "pointer",
   },
 
   close: {
-    position: "absolute",
-    top: 20,
-    left: 20,
     fontSize: 28,
     background: "transparent",
     border: "none",
     color: "white",
     cursor: "pointer",
+    textAlign: "left",
   },
 };
