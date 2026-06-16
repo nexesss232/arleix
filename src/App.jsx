@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 import Coin from "./components/Coin";
-import { images } from "./theme";
 
 const SHOP = [
   { id: "1", name: "+1 tap", price: 100, type: "tap", value: 1 },
   { id: "2", name: "+5 tap", price: 500, type: "tap", value: 5 },
   { id: "3", name: "+1 auto/sec", price: 800, type: "auto", value: 1 },
   { id: "4", name: "x2 power", price: 1500, type: "multi", value: 2 },
-  { id: "5", name: "crit +10%", price: 2000, type: "crit", value: 0.1 },
+  { id: "5", name: "+crit 10%", price: 2000, type: "crit", value: 0.1 },
 ];
 
 export default function App() {
@@ -16,12 +15,12 @@ export default function App() {
   const [auto, setAuto] = useState(0);
   const [crit, setCrit] = useState(0.05);
 
-  const [shop, setShop] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
   const [items, setItems] = useState(SHOP);
 
   const [float, setFloat] = useState([]);
 
-  // 💾 LOAD
+  // LOAD
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("game"));
     if (data) {
@@ -33,7 +32,7 @@ export default function App() {
     }
   }, []);
 
-  // 💾 SAVE
+  // SAVE
   useEffect(() => {
     localStorage.setItem(
       "game",
@@ -41,12 +40,11 @@ export default function App() {
     );
   }, [score, tap, auto, crit, items]);
 
-  // ⚡ auto income
+  // AUTO
   useEffect(() => {
     const i = setInterval(() => {
       if (auto > 0) setScore((p) => p + auto);
     }, 1000);
-
     return () => clearInterval(i);
   }, [auto]);
 
@@ -58,7 +56,7 @@ export default function App() {
     setScore((p) => p + gain);
 
     const id = Date.now();
-    setFloat((p) => [...p, { id, text: "+" + gain }]);
+    setFloat((p) => [...p, { id, value: gain }]);
 
     setTimeout(() => {
       setFloat((p) => p.filter((x) => x.id !== id));
@@ -81,8 +79,8 @@ export default function App() {
   return (
     <div style={styles.page}>
 
-      {/* TOP BAR */}
-      <div style={styles.top}>
+      {/* HUD */}
+      <div style={styles.hud}>
         💰 {score} | ⚡ x{tap}
       </div>
 
@@ -91,39 +89,35 @@ export default function App() {
         <Coin onClick={click} skin={{ color: "#facc15" }} />
       </div>
 
-      {/* SHOP BTN */}
-      <button style={styles.shopBtn} onClick={() => setShop(true)}>
+      {/* SHOP BUTTON */}
+      <button style={styles.shopBtn} onClick={() => setShopOpen(true)}>
         SHOP
       </button>
 
       {/* SHOP */}
-      {shop && (
+      {shopOpen && (
         <div style={styles.shop}>
           <div style={styles.shopTop}>
-            <button onClick={() => setShop(false)}>←</button>
             <div>SHOP</div>
             <div>💰 {score}</div>
+            <button onClick={() => setShopOpen(false)}>✕</button>
           </div>
 
           {items.map((i) => (
-            <button
-              key={i.id}
-              style={styles.item}
-              onClick={() => buy(i)}
-            >
-              {i.name} — {i.price}
+            <button key={i.id} style={styles.item} onClick={() => buy(i)}>
+              <span>{i.name}</span>
+              <span>{i.price}💰</span>
             </button>
           ))}
         </div>
       )}
 
-      {/* FLOAT */}
+      {/* FLOAT TEXT */}
       {float.map((f) => (
         <div key={f.id} style={styles.float}>
-          {f.text}
+          +{f.value}
         </div>
       ))}
-
     </div>
   );
 }
@@ -138,11 +132,12 @@ const styles = {
     fontFamily: "Arial",
   },
 
-  top: {
+  hud: {
     position: "absolute",
-    top: 20,
-    left: 20,
-    fontSize: 20,
+    top: 15,
+    left: 15,
+    fontSize: 18,
+    fontWeight: "bold",
   },
 
   center: {
@@ -157,42 +152,52 @@ const styles = {
     bottom: 20,
     left: "50%",
     transform: "translateX(-50%)",
-    padding: "10px 20px",
+    padding: "12px 22px",
+    borderRadius: 12,
     border: "none",
-    borderRadius: 10,
     background: "#2563eb",
     color: "white",
+    fontWeight: "bold",
   },
 
   shop: {
     position: "absolute",
     inset: 0,
     background: "#0b1220",
-    zIndex: 10,
     padding: 20,
+    zIndex: 100,
   },
 
   shopTop: {
     display: "flex",
     justifyContent: "space-between",
     marginBottom: 20,
+    fontSize: 20,
   },
 
   item: {
     width: "100%",
-    padding: 15,
+    padding: 16,
     marginBottom: 10,
     background: "#111827",
-    color: "white",
+    borderRadius: 12,
     border: "1px solid #1f2937",
+    color: "white",
+    display: "flex",
+    justifyContent: "space-between",
+    cursor: "pointer",
   },
 
   float: {
     position: "absolute",
-    top: "50%",
+    top: "45%",
     left: "50%",
-    transform: "translate(-50%,-60px)",
-    animation: "float 0.5s ease",
+    transform: "translate(-50%, 0)",
+    fontSize: 34,
+    fontWeight: "bold",
     color: "#22c55e",
+    textShadow: "0 0 10px rgba(34,197,94,0.8)",
+    animation: "floatUp 0.5s ease forwards",
+    pointerEvents: "none",
   },
 };
