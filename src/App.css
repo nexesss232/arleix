@@ -1,11 +1,23 @@
 body {
   margin: 0;
+  padding: 0;
   overflow: hidden;
   background: #050816;
   font-family: Arial, sans-serif;
 }
 
-/* PAGE */
+/* прибирає сині обводки в Telegram / mobile */
+button,
+div {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ГОЛОВНИЙ КОНТЕЙНЕР */
 .page {
   height: 100vh;
   width: 100vw;
@@ -13,7 +25,7 @@ body {
   position: relative;
 }
 
-/* HUD */
+/* HUD (баланс зверху) */
 .hud {
   position: absolute;
   top: 15px;
@@ -22,15 +34,15 @@ body {
   font-weight: bold;
 }
 
-/* CENTER COIN */
+/* КНОПКА МОНЕТИ ПО ЦЕНТРУ */
 .center {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%,-50%);
 }
 
-/* SHOP BUTTON */
+/* КНОПКА МАГАЗИНУ */
 .shopBtn {
   position: absolute;
   bottom: 20px;
@@ -45,7 +57,7 @@ body {
   cursor: pointer;
 }
 
-/* SHOP */
+/* МАГАЗИН (FULL SCREEN) */
 .shop {
   position: absolute;
   inset: 0;
@@ -55,7 +67,7 @@ body {
   overflow-y: auto;
 }
 
-/* SHOP TOP */
+/* верх магазину */
 .shopTop {
   display: flex;
   justify-content: space-between;
@@ -63,7 +75,7 @@ body {
   font-size: 20px;
 }
 
-/* ITEM */
+/* КАРТКА ТОВАРУ */
 .item {
   width: 100%;
   padding: 16px;
@@ -77,24 +89,15 @@ body {
   cursor: pointer;
 }
 
-.itemName {
-  font-weight: bold;
+/* назва товару */
+.item div {
+  display: flex;
+  flex-direction: column;
 }
 
-.itemDesc {
-  font-size: 12px;
-  opacity: 0.7;
-  margin-top: 3px;
-}
-
-.price {
-  font-weight: bold;
-}
-
-/* FLOAT TEXT */
+/* FLOAT +числа */
 .float {
   position: absolute;
-  transform: translate(-50%, -50%);
   font-size: 20px;
   font-weight: bold;
   color: #22c55e;
@@ -103,24 +106,19 @@ body {
   pointer-events: none;
 }
 
-/* ANIMATION */
+/* АНИМАЦІЯ ВИЛЬОТУ */
 @keyframes floatUp {
   0% {
     opacity: 1;
-    transform: translate(-50%, -50%);
+    transform: translateY(0);
   }
   100% {
     opacity: 0;
-    transform: translate(-50%, -90px);
+    transform: translateY(-80px);
   }
 }
 
-/* REMOVE BLUE HIGHLIGHT (TELEGRAM FIX) */
-button, div {
-  -webkit-tap-highlight-color: transparent;
-}
-
-button:focus {
-  outline: none;
-  box-shadow: none;
+/* hover ефект (як гра) */
+.item:hover {
+  transform: scale(1.02);
 }
