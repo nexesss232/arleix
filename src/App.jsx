@@ -1,26 +1,35 @@
 import { useEffect, useState } from "react";
 import Coin from "./components/Coin";
+import { images } from "./theme";
 
-const SHOP_ITEMS = [
-  { id: "250", price: 250, bonus: 2 },
-  { id: "500", price: 500, bonus: 1 },
-  { id: "1000", price: 1000, bonus: 3 },
+const SHOP = [
+  { id: "1", name: "+1 tap", price: 100, type: "tap", value: 1 },
+  { id: "2", name: "+5 tap", price: 500, type: "tap", value: 5 },
+  { id: "3", name: "+1 auto/sec", price: 800, type: "auto", value: 1 },
+  { id: "4", name: "x2 power", price: 1500, type: "multi", value: 2 },
+  { id: "5", name: "crit +10%", price: 2000, type: "crit", value: 0.1 },
 ];
 
 export default function App() {
   const [score, setScore] = useState(0);
-  const [mult, setMult] = useState(1);
-  const [shopOpen, setShopOpen] = useState(false);
-  const [items, setItems] = useState(SHOP_ITEMS);
+  const [tap, setTap] = useState(1);
+  const [auto, setAuto] = useState(0);
+  const [crit, setCrit] = useState(0.05);
 
-  // 💾 LOAD SAVE
+  const [shop, setShop] = useState(false);
+  const [items, setItems] = useState(SHOP);
+
+  const [float, setFloat] = useState([]);
+
+  // 💾 LOAD
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem("game"));
-
-    if (saved) {
-      setScore(saved.score);
-      setMult(saved.mult);
-      setItems(saved.items ?? SHOP_ITEMS);
+    const data = JSON.parse(localStorage.getItem("game"));
+    if (data) {
+      setScore(data.score || 0);
+      setTap(data.tap || 1);
+      setAuto(data.auto || 0);
+      setCrit(data.crit || 0.05);
+      setItems(data.items || SHOP);
     }
   }, []);
 
@@ -28,80 +37,93 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(
       "game",
-      JSON.stringify({ score, mult, items })
+      JSON.stringify({ score, tap, auto, crit, items })
     );
-  }, [score, mult, items]);
+  }, [score, tap, auto, crit, items]);
 
-  function addCoin() {
-    setScore((p) => p + mult);
+  // ⚡ auto income
+  useEffect(() => {
+    const i = setInterval(() => {
+      if (auto > 0) setScore((p) => p + auto);
+    }, 1000);
+
+    return () => clearInterval(i);
+  }, [auto]);
+
+  function click() {
+    let gain = tap;
+
+    if (Math.random() < crit) gain *= 3;
+
+    setScore((p) => p + gain);
+
+    const id = Date.now();
+    setFloat((p) => [...p, { id, text: "+" + gain }]);
+
+    setTimeout(() => {
+      setFloat((p) => p.filter((x) => x.id !== id));
+    }, 500);
   }
 
   function buy(item) {
     if (score < item.price) return;
 
     setScore((p) => p - item.price);
-    setMult((p) => p + item.bonus);
 
-    // 🧠 прибрати куплений апгрейд
-    setItems((prev) => prev.filter((i) => i.id !== item.id));
-  }
+    if (item.type === "tap") setTap((p) => p + item.value);
+    if (item.type === "auto") setAuto((p) => p + item.value);
+    if (item.type === "multi") setTap((p) => p * item.value);
+    if (item.type === "crit") setCrit((p) => p + item.value);
 
-  function closeShop() {
-    const el = document.getElementById("shop");
-    if (!el) return;
-
-    el.classList.add("shopClose");
-
-    setTimeout(() => {
-      setShopOpen(false);
-    }, 350);
+    setItems((p) => p.filter((i) => i.id !== item.id));
   }
 
   return (
     <div style={styles.page}>
 
-      {/* 🌌 background */}
-      <div style={styles.background}>
-        <div style={styles.blob1}></div>
-        <div style={styles.blob2}></div>
-        <div style={styles.blob3}></div>
+      {/* TOP BAR */}
+      <div style={styles.top}>
+        💰 {score} | ⚡ x{tap}
       </div>
 
-      {/* 🧱 game */}
-      <div style={styles.card}>
-
-        <button style={styles.shopBtn} onClick={() => setShopOpen(true)}>
-          🛒
-        </button>
-
-        <div style={styles.score}>{score}</div>
-
-        <div style={styles.center}>
-          <Coin onClick={addCoin} />
-        </div>
-
+      {/* COIN */}
+      <div style={styles.center}>
+        <Coin onClick={click} skin={{ color: "#facc15" }} />
       </div>
 
-      {/* 🛍️ SHOP */}
-      {shopOpen && (
-        <div id="shop" style={styles.shop}>
-          <button style={styles.close} onClick={closeShop}>
-            ←
-          </button>
+      {/* SHOP BTN */}
+      <button style={styles.shopBtn} onClick={() => setShop(true)}>
+        SHOP
+      </button>
 
-          <h2>Магазин</h2>
+      {/* SHOP */}
+      {shop && (
+        <div style={styles.shop}>
+          <div style={styles.shopTop}>
+            <button onClick={() => setShop(false)}>←</button>
+            <div>SHOP</div>
+            <div>💰 {score}</div>
+          </div>
 
-          {items.map((item) => (
+          {items.map((i) => (
             <button
-              key={item.id}
-              onClick={() => buy(item)}
-              style={styles.shopItem}
+              key={i.id}
+              style={styles.item}
+              onClick={() => buy(i)}
             >
-              +{item.bonus} за клік — {item.price}
+              {i.name} — {i.price}
             </button>
           ))}
         </div>
       )}
+
+      {/* FLOAT */}
+      {float.map((f) => (
+        <div key={f.id} style={styles.float}>
+          {f.text}
+        </div>
+      ))}
+
     </div>
   );
 }
@@ -110,118 +132,67 @@ const styles = {
 
   page: {
     height: "100vh",
-    background: "#0f172a",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    overflow: "hidden",
-    position: "relative",
+    background: "#050816",
     color: "white",
+    overflow: "hidden",
+    fontFamily: "Arial",
   },
 
-  background: {
+  top: {
     position: "absolute",
-    inset: 0,
-  },
-
-  blob1: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    background: "radial-gradient(circle, #60a5fa, transparent)",
-    top: "10%",
-    left: "10%",
-    filter: "blur(40px)",
-  },
-
-  blob2: {
-    position: "absolute",
-    width: 250,
-    height: 250,
-    background: "radial-gradient(circle, #a78bfa, transparent)",
-    bottom: "10%",
-    right: "10%",
-    filter: "blur(50px)",
-  },
-
-  blob3: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    background: "radial-gradient(circle, #34d399, transparent)",
-    top: "50%",
-    left: "60%",
-    filter: "blur(60px)",
-  },
-
-  card: {
-    width: 360,
-    height: 520,
-    background: "rgba(255,255,255,0.05)",
-    borderRadius: 25,
-    border: "1px solid rgba(255,255,255,0.1)",
-    backdropFilter: "blur(12px)",
-    position: "relative",
-    zIndex: 2,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
+    top: 20,
+    left: 20,
+    fontSize: 20,
   },
 
   center: {
     position: "absolute",
-    top: "55%",
+    top: "50%",
     left: "50%",
-    transform: "translate(-50%, -50%)",
-  },
-
-  score: {
-    position: "absolute",
-    top: 15,
-    right: 15,
-    fontSize: 32,
-    fontWeight: "bold",
+    transform: "translate(-50%,-50%)",
   },
 
   shopBtn: {
     position: "absolute",
-    top: 15,
-    left: 15,
-    fontSize: 26,
-    background: "transparent",
+    bottom: 20,
+    left: "50%",
+    transform: "translateX(-50%)",
+    padding: "10px 20px",
     border: "none",
+    borderRadius: 10,
+    background: "#2563eb",
     color: "white",
-    cursor: "pointer",
   },
 
   shop: {
     position: "absolute",
-    top: 0,
-    left: 0,
-    width: "300px",
-    height: "100%",
-    background: "#111827",
-    display: "flex",
-    flexDirection: "column",
+    inset: 0,
+    background: "#0b1220",
+    zIndex: 10,
     padding: 20,
-    gap: 10,
-    animation: "shopOpen 0.35s ease",
   },
 
-  shopItem: {
-    padding: 10,
-    background: "#1f2937",
-    border: "none",
-    color: "white",
-    cursor: "pointer",
+  shopTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: 20,
   },
 
-  close: {
-    fontSize: 28,
-    background: "transparent",
-    border: "none",
+  item: {
+    width: "100%",
+    padding: 15,
+    marginBottom: 10,
+    background: "#111827",
     color: "white",
-    cursor: "pointer",
-    textAlign: "left",
+    border: "1px solid #1f2937",
+  },
+
+  float: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: "translate(-50%,-60px)",
+    animation: "float 0.5s ease",
+    color: "#22c55e",
   },
 };
