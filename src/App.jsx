@@ -20,24 +20,7 @@ export default function App() {
 
   const [float, setFloat] = useState([]);
 
-  useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("game"));
-    if (data) {
-      setScore(data.score || 0);
-      setTap(data.tap || 1);
-      setAuto(data.auto || 0);
-      setCrit(data.crit || 0.05);
-      setItems(data.items || SHOP);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "game",
-      JSON.stringify({ score, tap, auto, crit, items })
-    );
-  }, [score, tap, auto, crit, items]);
-
+  // auto income
   useEffect(() => {
     const i = setInterval(() => {
       if (auto > 0) setScore((p) => p + auto);
@@ -45,6 +28,7 @@ export default function App() {
     return () => clearInterval(i);
   }, [auto]);
 
+  // CLICK + RANDOM FLOAT AROUND BUTTON
   function click(e) {
     let gain = tap;
 
@@ -52,14 +36,29 @@ export default function App() {
 
     setScore((p) => p + gain);
 
+    const rect = e.target.getBoundingClientRect();
+
+    // 🎯 РАДІУС (щоб не далеко від кнопки)
+    const radius = 80;
+
+    const angle = Math.random() * Math.PI * 2;
+
+    const x =
+      rect.left + rect.width / 2 + Math.cos(angle) * (Math.random() * radius);
+
+    const y =
+      rect.top + rect.height / 2 + Math.sin(angle) * (Math.random() * radius);
+
     const id = Date.now();
-    setFloat((p) => [...p, { id, value: gain }]);
+
+    setFloat((p) => [...p, { id, value: gain, x, y }]);
 
     setTimeout(() => {
-      setFloat((p) => p.filter((x) => x.id !== id));
+      setFloat((p) => p.filter((f) => f.id !== id));
     }, 500);
   }
 
+  // BUY
   function buy(item) {
     if (score < item.price) return;
 
@@ -76,20 +75,24 @@ export default function App() {
   return (
     <div style={styles.page}>
 
+      {/* HUD */}
       <div style={styles.hud}>
         💰 {score} | ⚡ x{tap}
       </div>
 
+      {/* COIN */}
       <div style={styles.center}>
         <div onClick={click}>
           <Coin skin={{ color: "#facc15" }} />
         </div>
       </div>
 
+      {/* SHOP BTN */}
       <button style={styles.shopBtn} onClick={() => setShopOpen(true)}>
         SHOP
       </button>
 
+      {/* SHOP */}
       {shopOpen && (
         <div style={styles.shop}>
           <div style={styles.shopTop}>
@@ -103,7 +106,7 @@ export default function App() {
               <div>
                 <div style={{ fontWeight: "bold" }}>{i.name}</div>
 
-                {/* ВИПРАВЛЕНИЙ ТЕКСТ */}
+                {/* ✔ ЩО ДАЄ АПГРЕЙД */}
                 <div style={{ fontSize: 12, opacity: 0.7 }}>
                   {i.type === "tap" && `+${i.value} до кліку`}
                   {i.type === "auto" && `+${i.value}/сек`}
@@ -120,8 +123,23 @@ export default function App() {
         </div>
       )}
 
+      {/* FLOAT NUMBERS */}
       {float.map((f) => (
-        <div key={f.id} style={styles.float}>
+        <div
+          key={f.id}
+          style={{
+            position: "absolute",
+            left: f.x,
+            top: f.y,
+            transform: "translate(-50%, -50%)",
+            fontSize: 18,
+            fontWeight: "bold",
+            color: "#22c55e",
+            textShadow: "0 0 10px rgba(34,197,94,0.8)",
+            animation: "floatUp 0.5s ease forwards",
+            pointerEvents: "none",
+          }}
+        >
           +{f.value}
         </div>
       ))}
@@ -193,18 +211,5 @@ const styles = {
     color: "white",
     display: "flex",
     justifyContent: "space-between",
-  },
-
-  float: {
-    position: "absolute",
-    top: "45%",
-    left: "50%",
-    transform: "translate(-50%, 0)",
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#22c55e",
-    textShadow: "0 0 10px rgba(34,197,94,0.8)",
-    animation: "floatUp 0.5s ease forwards",
-    pointerEvents: "none",
   },
 };
