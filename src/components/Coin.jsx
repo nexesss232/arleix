@@ -1,14 +1,15 @@
-import coinImg from "../assets/pngwing.com.png";
-
-export default function Coin({ onClick }) {
+export default function Coin({ onClick, skin }) {
   return (
-    <img
-      src={coinImg}
+    <div
       onClick={onClick}
       style={{
-        width: 160,
+        width: 170,
+        height: 170,
+        borderRadius: "50%",
+        background: `radial-gradient(circle, ${skin.color}, #000)`,
+        boxShadow: `0 0 40px ${skin.color}`,
         cursor: "pointer",
-        userSelect: "none",
+        transition: "0.1s",
       }}
     />
   );
