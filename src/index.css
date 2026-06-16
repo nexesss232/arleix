@@ -3,11 +3,27 @@ body {
   overflow: hidden;
 }
 
-@keyframes float {
-  from { opacity: 1; transform: translate(-50%, 0); }
-  to { opacity: 0; transform: translate(-50%, -80px); }
+button {
+  outline: none;
+  border: none;
 }
 
-img:active {
-  transform: scale(0.95);
+button:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+@keyframes floatUp {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -80px);
+  }
+}
+
+button:hover {
+  transform: scale(1.02);
 }
