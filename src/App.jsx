@@ -32,15 +32,15 @@ export default function App() {
             ←
           </button>
 
-          <h1>🛒 Магазин</h1>
+          <h1>🛒 shop</h1>
 
-          <p>Монети: {score}</p>
+          <p>Coins: {score}</p>
 
           <button onClick={buyUpgrade} style={styles.button}>
-            🔥 +2 за клік (250 🪙)
+            🔥 +2 per click (250 🪙)
           </button>
 
-          {upgraded && <p>✔ Покращення активне</p>}
+          {upgraded && <p>✔ Upgrade active</p>}
         </div>
       </div>
     );
@@ -53,7 +53,7 @@ export default function App() {
 
         {/* 🛒 shop button always visible */}
         <button onClick={() => setShopOpen(true)} style={styles.shopBtn}>
-          🛒 Магазин
+          🛒 shop
         </button>
 
         <h1>🪙 Coin Clicker</h1>
