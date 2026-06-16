@@ -2,21 +2,12 @@ import { useEffect, useState } from "react";
 
 export default function App() {
   const [score, setScore] = useState(0);
-  const [clicks, setClicks] = useState(0);
-  const [shopOpen, setShopOpen] = useState(false);
   const [upgraded, setUpgraded] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
 
   function addCoin() {
     setScore((prev) => prev + (upgraded ? 2 : 1));
-    setClicks((prev) => prev + 1);
   }
-
-  // Відкриття магазину після 50 кліків
-  useEffect(() => {
-    if (clicks >= 50) {
-      setShopOpen(true);
-    }
-  }, [clicks]);
 
   function buyUpgrade() {
     if (score >= 250) {
@@ -27,16 +18,20 @@ export default function App() {
 
   function reset() {
     setScore(0);
-    setClicks(0);
-    setShopOpen(false);
     setUpgraded(false);
   }
 
-  // 🛒 МАГАЗИН (ОКРЕМЕ ВІКНО)
+  // 🛒 SHOP SCREEN
   if (shopOpen) {
     return (
       <div style={styles.page}>
         <div style={styles.card}>
+
+          {/* back button */}
+          <button onClick={() => setShopOpen(false)} style={styles.back}>
+            ←
+          </button>
+
           <h1>🛒 Магазин</h1>
 
           <p>Монети: {score}</p>
@@ -46,19 +41,21 @@ export default function App() {
           </button>
 
           {upgraded && <p>✔ Покращення активне</p>}
-
-          <button onClick={() => setShopOpen(false)} style={styles.button}>
-            ⬅ Повернутись в гру
-          </button>
         </div>
       </div>
     );
   }
 
-  // 🎮 ГРА
+  // 🎮 GAME SCREEN
   return (
     <div style={styles.page}>
       <div style={styles.card}>
+
+        {/* 🛒 shop button always visible */}
+        <button onClick={() => setShopOpen(true)} style={styles.shopBtn}>
+          🛒 Магазин
+        </button>
+
         <h1>🪙 Coin Clicker</h1>
 
         <div style={styles.score}>{score} монет</div>
@@ -67,15 +64,10 @@ export default function App() {
           🪙
         </button>
 
-        {clicks >= 50 && (
-          <button onClick={() => setShopOpen(true)} style={styles.button}>
-            🛒 Відкрити магазин
-          </button>
-        )}
-
         <button onClick={reset} style={styles.button}>
           🔄 Скинути
         </button>
+
       </div>
     </div>
   );
@@ -91,13 +83,45 @@ const styles = {
     color: "white",
     fontFamily: "Arial",
   },
+
   card: {
     textAlign: "center",
     padding: "40px",
     borderRadius: "20px",
     background: "rgba(255,255,255,0.05)",
     boxShadow: "0 0 20px rgba(0,0,0,0.3)",
+    position: "relative",
+    width: "320px",
   },
+
+  shopBtn: {
+    position: "absolute",
+    top: "10px",
+    left: "10px",
+    padding: "8px 12px",
+    borderRadius: "10px",
+    border: "none",
+    cursor: "pointer",
+    background: "#ffcc00",
+    fontWeight: "bold",
+  },
+
+  back: {
+    position: "absolute",
+    top: "10px",
+    left: "10px",
+    fontSize: "20px",
+    border: "none",
+    background: "transparent",
+    color: "white",
+    cursor: "pointer",
+  },
+
+  score: {
+    fontSize: "28px",
+    margin: "20px 0",
+  },
+
   coin: {
     fontSize: "60px",
     padding: "20px",
@@ -106,15 +130,12 @@ const styles = {
     border: "none",
     background: "transparent",
   },
+
   button: {
     marginTop: "15px",
     padding: "10px 20px",
     borderRadius: "10px",
     border: "none",
     cursor: "pointer",
-  },
-  score: {
-    fontSize: "28px",
-    margin: "20px 0",
   },
 };
