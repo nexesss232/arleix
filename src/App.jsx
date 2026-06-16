@@ -1,14 +1,33 @@
 import { useEffect, useState } from "react";
 
 export default function App() {
-  const [score, setScore] = useState(0);
-  const [upgraded, setUpgraded] = useState(false);
+  // 💾 LOAD FROM STORAGE
+  const [score, setScore] = useState(() => {
+    return Number(localStorage.getItem("score")) || 0;
+  });
+
+  const [upgraded, setUpgraded] = useState(() => {
+    return localStorage.getItem("upgraded") === "true";
+  });
+
   const [shopOpen, setShopOpen] = useState(false);
 
+  // 💾 SAVE SCORE
+  useEffect(() => {
+    localStorage.setItem("score", score);
+  }, [score]);
+
+  // 💾 SAVE UPGRADE
+  useEffect(() => {
+    localStorage.setItem("upgraded", upgraded);
+  }, [upgraded]);
+
+  // 🪙 CLICK COIN
   function addCoin() {
     setScore((prev) => prev + (upgraded ? 2 : 1));
   }
 
+  // 🔥 BUY UPGRADE
   function buyUpgrade() {
     if (score >= 250) {
       setScore((prev) => prev - 250);
@@ -32,15 +51,15 @@ export default function App() {
             ←
           </button>
 
-          <h1>🛒 shop</h1>
+          <h1>🛒 Магазин</h1>
 
-          <p>Coins: {score}</p>
+          <div style={styles.score}>{score} монет</div>
 
           <button onClick={buyUpgrade} style={styles.button}>
-            🔥 +2 per click (250 🪙)
+            🔥 +2 за клік (250 🪙)
           </button>
 
-          {upgraded && <p>✔ Upgrade active</p>}
+          {upgraded && <p>✔ Покращення активне</p>}
         </div>
       </div>
     );
@@ -51,9 +70,9 @@ export default function App() {
     <div style={styles.page}>
       <div style={styles.card}>
 
-        {/* 🛒 shop button always visible */}
+        {/* 🛒 SHOP BUTTON */}
         <button onClick={() => setShopOpen(true)} style={styles.shopBtn}>
-          🛒 shop
+          🛒 Магазин
         </button>
 
         <h1>🪙 Coin Clicker</h1>
@@ -104,6 +123,7 @@ const styles = {
     cursor: "pointer",
     background: "#ffcc00",
     fontWeight: "bold",
+    color: "black",
   },
 
   back: {
