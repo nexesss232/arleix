@@ -1,40 +1,39 @@
-export default function Shop({ score, buy, close, upg }) {
+export default function Shop({ items, buy, close }) {
   return (
-    <div style={styles.page}>
-      <button onClick={close} style={styles.back}>←</button>
+    <div style={styles.shop}>
+      <button onClick={close} style={styles.close}>←</button>
 
-      <h2>Shop</h2>
-
-      <div>🪙 {score}</div>
-
-      {!upg[250] && (
-        <button onClick={() => buy("250")}>+2 click — 250</button>
-      )}
-
-      {!upg[500] && (
-        <button onClick={() => buy("500")}>+1 click — 500</button>
-      )}
-
-      {!upg[1000] && (
-        <button onClick={() => buy("1000")}>+3 click — 1000</button>
-      )}
+      {items.map((i) => (
+        <button key={i.id} style={styles.item} onClick={() => buy(i)}>
+          <span>{i.name}</span>
+          <span>{i.price} 💰</span>
+        </button>
+      ))}
     </div>
   );
 }
 
 const styles = {
-  page: {
-    height: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#111",
-    color: "white",
-  },
-  back: {
+  shop: {
     position: "absolute",
-    top: 10,
-    left: 10,
+    inset: 0,
+    background: "#0b1220",
+    padding: 20,
+    zIndex: 20,
+  },
+  item: {
+    width: "100%",
+    marginTop: 10,
+    padding: 15,
+    background: "#111827",
+    color: "white",
+    display: "flex",
+    justifyContent: "space-between",
+  },
+  close: {
+    fontSize: 26,
+    background: "none",
+    border: "none",
+    color: "white",
   },
 };
