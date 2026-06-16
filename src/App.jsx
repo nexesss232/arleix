@@ -6,7 +6,7 @@ const SHOP = [
   { id: "2", name: "+5 tap", price: 500, type: "tap", value: 5 },
   { id: "3", name: "+1 auto/sec", price: 800, type: "auto", value: 1 },
   { id: "4", name: "x2 power", price: 1500, type: "multi", value: 2 },
-  { id: "5", name: "+crit 10%", price: 2000, type: "crit", value: 0.1 },
+  { id: "5", name: "+10% crit", price: 2000, type: "crit", value: 0.1 },
 ];
 
 export default function App() {
@@ -20,7 +20,7 @@ export default function App() {
 
   const [float, setFloat] = useState([]);
 
-  // LOAD
+  // load
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("game"));
     if (data) {
@@ -32,7 +32,7 @@ export default function App() {
     }
   }, []);
 
-  // SAVE
+  // save
   useEffect(() => {
     localStorage.setItem(
       "game",
@@ -40,7 +40,7 @@ export default function App() {
     );
   }, [score, tap, auto, crit, items]);
 
-  // AUTO
+  // auto income
   useEffect(() => {
     const i = setInterval(() => {
       if (auto > 0) setScore((p) => p + auto);
@@ -48,21 +48,34 @@ export default function App() {
     return () => clearInterval(i);
   }, [auto]);
 
-  function click() {
+  // CLICK
+  function click(e) {
     let gain = tap;
 
     if (Math.random() < crit) gain *= 3;
 
     setScore((p) => p + gain);
 
+    const rect = e?.target?.getBoundingClientRect();
+
     const id = Date.now();
-    setFloat((p) => [...p, { id, value: gain }]);
+
+    const x = rect
+      ? rect.left + rect.width / 2
+      : window.innerWidth / 2;
+
+    const y = rect
+      ? rect.top + rect.height / 2
+      : window.innerHeight / 2;
+
+    setFloat((p) => [...p, { id, value: gain, x, y }]);
 
     setTimeout(() => {
-      setFloat((p) => p.filter((x) => x.id !== id));
+      setFloat((p) => p.filter((f) => f.id !== id));
     }, 500);
   }
 
+  // BUY
   function buy(item) {
     if (score < item.price) return;
 
@@ -77,141 +90,62 @@ export default function App() {
   }
 
   return (
-    <div style={styles.page}>
+    <div className="page">
 
       {/* HUD */}
-      <div style={styles.hud}>
+      <div className="hud">
         💰 {score} | ⚡ x{tap}
       </div>
 
       {/* COIN */}
-      <div style={styles.center}>
-        <Coin onClick={click} skin={{ color: "#facc15" }} />
+      <div className="center">
+        <div onClick={click}>
+          <Coin skin={{ color: "#facc15" }} />
+        </div>
       </div>
 
       {/* SHOP BUTTON */}
-      <button style={styles.shopBtn} onClick={() => setShopOpen(true)}>
+      <button className="shopBtn" onClick={() => setShopOpen(true)}>
         SHOP
       </button>
 
       {/* SHOP */}
       {shopOpen && (
-        <div style={styles.shop}>
-          <div style={styles.shopTop}>
+        <div className="shop">
+          <div className="shopTop">
             <div>SHOP</div>
             <div>💰 {score}</div>
             <button onClick={() => setShopOpen(false)}>✕</button>
           </div>
 
           {items.map((i) => (
-  <button key={i.id} style={styles.item} onClick={() => buy(i)}>
-    
-    <div>
-      <div style={{ fontWeight: "bold" }}>{i.name}</div>
+            <button key={i.id} className="item" onClick={() => buy(i)}>
+              <div>
+                <div className="itemName">{i.name}</div>
+                <div className="itemDesc">
+                  {i.type === "tap" && `+${i.value} до кліку`}
+                  {i.type === "auto" && `+${i.value}/сек`}
+                  {i.type === "multi" && `x${i.value} множник`}
+                  {i.type === "crit" && `+${i.value * 100}% крит`}
+                </div>
+              </div>
 
-      <div style={{ fontSize: 12, opacity: 0.7 }}>
-        {i.type === "tap" && `+${i.value} за клік`}
-        {i.type === "auto" && `+${i.value}/сек`}
-        {i.type === "multi" && `x${i.value} множник`}
-        {i.type === "crit" && `+${i.value * 100}% крит`}
-        </div>
-      </div>
-
-       <div style={{ fontWeight: "bold" }}>
-         {i.price}💰
-       </div>
-
-    </button>
-    ))}
+              <div className="price">{i.price}💰</div>
+            </button>
+          ))}
         </div>
       )}
 
-      {/* FLOAT TEXT */}
+      {/* FLOAT */}
       {float.map((f) => (
-        <div key={f.id} style={styles.float}>
+        <div
+          key={f.id}
+          className="float"
+          style={{ left: f.x, top: f.y }}
+        >
           +{f.value}
         </div>
       ))}
     </div>
   );
 }
-
-const styles = {
-
-  page: {
-    height: "100vh",
-    background: "#050816",
-    color: "white",
-    overflow: "hidden",
-    fontFamily: "Arial",
-  },
-
-  hud: {
-    position: "absolute",
-    top: 15,
-    left: 15,
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-
-  center: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%,-50%)",
-  },
-
-  shopBtn: {
-    position: "absolute",
-    bottom: 20,
-    left: "50%",
-    transform: "translateX(-50%)",
-    padding: "12px 22px",
-    borderRadius: 12,
-    border: "none",
-    background: "#2563eb",
-    color: "white",
-    fontWeight: "bold",
-  },
-
-  shop: {
-    position: "absolute",
-    inset: 0,
-    background: "#0b1220",
-    padding: 20,
-    zIndex: 100,
-  },
-
-  shopTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: 20,
-    fontSize: 20,
-  },
-
-  item: {
-    width: "100%",
-    padding: 16,
-    marginBottom: 10,
-    background: "#111827",
-    borderRadius: 12,
-    border: "1px solid #1f2937",
-    color: "white",
-    display: "flex",
-    justifyContent: "space-between",
-    cursor: "pointer",
-  },
-
-  float: {
-   position: "absolute",
-   top: "45%",
-   left: "50%",
-   transform: "translate(-50%, 0)",
-   fontSize: 34,
-   fontWeight: "bold",
-   color: "#22c55e",
-   textShadow: "0 0 10px rgba(34,197,94,0.8)",
-   animation: "floatUp 0.5s ease forwards",
-   pointerEvents: "none",
-  },
-};
