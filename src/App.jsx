@@ -1,10 +1,23 @@
 import { useEffect, useState } from "react";
+import { supabase } from "./supabase";
+
+// 🧠 тимчасовий user id (пізніше замінимо на Telegram)
+const getUserId = () => {
+  let id = localStorage.getItem("user_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("user_id", id);
+  }
+  return id;
+};
 
 export default function App() {
-  const [score, setScore] = useState(0);
-  const [shopOpen, setShopOpen] = useState(false);
+  const userId = getUserId();
 
+  const [score, setScore] = useState(0);
   const [mult, setMult] = useState(1);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [upg, setUpg] = useState({
     u250: false,
@@ -12,49 +25,102 @@ export default function App() {
     u1000: false,
   });
 
-  // 🚫 remove blue tap highlight (mobile/telegram)
+  // 🚫 remove blue highlight
   useEffect(() => {
     document.body.style.userSelect = "none";
     document.body.style.webkitTapHighlightColor = "transparent";
-    document.body.style.outline = "none";
   }, []);
 
+  // 📥 LOAD PLAYER
+  useEffect(() => {
+    loadPlayer();
+  }, []);
+
+  async function loadPlayer() {
+    const { data } = await supabase
+      .from("players")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (data) {
+      setScore(data.score || 0);
+      setMult(data.multiplier || 1);
+      setUpg(data.upgrades || {});
+    } else {
+      await supabase.from("players").insert({
+        id: userId,
+        score: 0,
+        multiplier: 1,
+        upgrades: {},
+      });
+    }
+
+    setLoading(false);
+  }
+
+  // 💾 SAVE PLAYER
+  async function savePlayer(newScore, newMult, newUpg) {
+    await supabase.from("players").update({
+      score: newScore,
+      multiplier: newMult,
+      upgrades: newUpg,
+    }).eq("id", userId);
+  }
+
   function addCoin() {
-    setScore((s) => s + mult);
+    const newScore = score + mult;
+    setScore(newScore);
+    savePlayer(newScore, mult, upg);
   }
 
   function buy(type) {
+    let newScore = score;
+    let newMult = mult;
+    let newUpg = { ...upg };
+
     if (type === "u250" && score >= 250 && !upg.u250) {
-      setScore((s) => s - 250);
-      setMult((m) => m + 2);
-      setUpg((u) => ({ ...u, u250: true }));
+      newScore -= 250;
+      newMult += 2;
+      newUpg.u250 = true;
     }
 
     if (type === "u500" && score >= 500 && !upg.u500) {
-      setScore((s) => s - 500);
-      setMult((m) => m + 1);
-      setUpg((u) => ({ ...u, u500: true }));
+      newScore -= 500;
+      newMult += 1;
+      newUpg.u500 = true;
     }
 
     if (type === "u1000" && score >= 1000 && !upg.u1000) {
-      setScore((s) => s - 1000);
-      setMult((m) => m + 3);
-      setUpg((u) => ({ ...u, u1000: true }));
+      newScore -= 1000;
+      newMult += 3;
+      newUpg.u1000 = true;
     }
+
+    setScore(newScore);
+    setMult(newMult);
+    setUpg(newUpg);
+
+    savePlayer(newScore, newMult, newUpg);
   }
 
-  // 🛒 SHOP SCREEN
+  if (loading) {
+    return (
+      <div style={styles.page}>
+        <h2>Loading...</h2>
+      </div>
+    );
+  }
+
+  // 🛒 SHOP
   if (shopOpen) {
     return (
       <div style={styles.page}>
         <div style={styles.card}>
-
-          {/* back */}
           <button onClick={() => setShopOpen(false)} style={styles.back}>
             ←
           </button>
 
-          {/* balance top right */}
           <div style={styles.balance}>
             🪙 {score}
           </div>
@@ -78,21 +144,15 @@ export default function App() {
               +3 за клік — 1000
             </button>
           )}
-
-          {upg.u250 && upg.u500 && upg.u1000 && (
-            <p>✔ всі покращення куплені</p>
-          )}
-
         </div>
       </div>
     );
   }
 
-  // 🎮 GAME SCREEN
+  // 🎮 GAME
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-
         <button onClick={() => setShopOpen(true)} style={styles.shop}>
           🛒
         </button>
@@ -102,7 +162,6 @@ export default function App() {
         <button onClick={addCoin} style={styles.coin}>
           🪙
         </button>
-
       </div>
     </div>
   );
@@ -132,17 +191,8 @@ const styles = {
     position: "absolute",
     top: 10,
     left: 10,
-    padding: "6px 10px",
-    borderRadius: 10,
     border: "none",
     cursor: "pointer",
-  },
-
-  balance: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    fontSize: 16,
   },
 
   back: {
@@ -156,6 +206,12 @@ const styles = {
     cursor: "pointer",
   },
 
+  balance: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+  },
+
   score: {
     fontSize: 40,
     marginBottom: 20,
@@ -163,8 +219,8 @@ const styles = {
 
   coin: {
     fontSize: 60,
-    border: "none",
     background: "transparent",
+    border: "none",
     cursor: "pointer",
   },
 
