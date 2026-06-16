@@ -1,43 +1,46 @@
 import { useEffect, useState } from "react";
 
 export default function App() {
-  // 💾 LOAD FROM STORAGE
-  const [score, setScore] = useState(() => {
-    return Number(localStorage.getItem("score")) || 0;
-  });
-
-  const [upgraded, setUpgraded] = useState(() => {
-    return localStorage.getItem("upgraded") === "true";
-  });
-
+  const [score, setScore] = useState(0);
   const [shopOpen, setShopOpen] = useState(false);
 
-  // 💾 SAVE SCORE
-  useEffect(() => {
-    localStorage.setItem("score", score);
-  }, [score]);
+  const [mult, setMult] = useState(1);
 
-  // 💾 SAVE UPGRADE
-  useEffect(() => {
-    localStorage.setItem("upgraded", upgraded);
-  }, [upgraded]);
+  const [upg, setUpg] = useState({
+    u250: false,
+    u500: false,
+    u1000: false,
+  });
 
-  // 🪙 CLICK COIN
+  // 🚫 remove blue tap highlight (mobile/telegram)
+  useEffect(() => {
+    document.body.style.userSelect = "none";
+    document.body.style.webkitTapHighlightColor = "transparent";
+    document.body.style.outline = "none";
+  }, []);
+
   function addCoin() {
-    setScore((prev) => prev + (upgraded ? 2 : 1));
+    setScore((s) => s + mult);
   }
 
-  // 🔥 BUY UPGRADE
-  function buyUpgrade() {
-    if (score >= 250) {
-      setScore((prev) => prev - 250);
-      setUpgraded(true);
+  function buy(type) {
+    if (type === "u250" && score >= 250 && !upg.u250) {
+      setScore((s) => s - 250);
+      setMult((m) => m + 2);
+      setUpg((u) => ({ ...u, u250: true }));
     }
-  }
 
-  function reset() {
-    setScore(0);
-    setUpgraded(false);
+    if (type === "u500" && score >= 500 && !upg.u500) {
+      setScore((s) => s - 500);
+      setMult((m) => m + 1);
+      setUpg((u) => ({ ...u, u500: true }));
+    }
+
+    if (type === "u1000" && score >= 1000 && !upg.u1000) {
+      setScore((s) => s - 1000);
+      setMult((m) => m + 3);
+      setUpg((u) => ({ ...u, u1000: true }));
+    }
   }
 
   // 🛒 SHOP SCREEN
@@ -46,20 +49,40 @@ export default function App() {
       <div style={styles.page}>
         <div style={styles.card}>
 
-          {/* back button */}
+          {/* back */}
           <button onClick={() => setShopOpen(false)} style={styles.back}>
             ←
           </button>
 
-          <h1>🛒 Магазин</h1>
+          {/* balance top right */}
+          <div style={styles.balance}>
+            🪙 {score}
+          </div>
 
-          <div style={styles.score}>{score} монет</div>
+          <h2>🛒 Магазин</h2>
 
-          <button onClick={buyUpgrade} style={styles.button}>
-            🔥 +2 за клік (250 🪙)
-          </button>
+          {!upg.u250 && (
+            <button onClick={() => buy("u250")} style={styles.btn}>
+              +2 за клік — 250
+            </button>
+          )}
 
-          {upgraded && <p>✔ Покращення активне</p>}
+          {!upg.u500 && (
+            <button onClick={() => buy("u500")} style={styles.btn}>
+              +1 за клік — 500
+            </button>
+          )}
+
+          {!upg.u1000 && (
+            <button onClick={() => buy("u1000")} style={styles.btn}>
+              +3 за клік — 1000
+            </button>
+          )}
+
+          {upg.u250 && upg.u500 && upg.u1000 && (
+            <p>✔ всі покращення куплені</p>
+          )}
+
         </div>
       </div>
     );
@@ -70,21 +93,14 @@ export default function App() {
     <div style={styles.page}>
       <div style={styles.card}>
 
-        {/* 🛒 SHOP BUTTON */}
-        <button onClick={() => setShopOpen(true)} style={styles.shopBtn}>
-          🛒 Магазин
+        <button onClick={() => setShopOpen(true)} style={styles.shop}>
+          🛒
         </button>
 
-        <h1>🪙 Coin Clicker</h1>
-
-        <div style={styles.score}>{score} монет</div>
+        <div style={styles.score}>{score}</div>
 
         <button onClick={addCoin} style={styles.coin}>
           🪙
-        </button>
-
-        <button onClick={reset} style={styles.button}>
-          🔄 Скинути
         </button>
 
       </div>
@@ -98,63 +114,66 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(135deg, #1e1e2f, #2c2c54)",
+    background: "linear-gradient(135deg,#1e1e2f,#2c2c54)",
     color: "white",
     fontFamily: "Arial",
   },
 
   card: {
+    position: "relative",
+    width: "320px",
     textAlign: "center",
     padding: "40px",
     borderRadius: "20px",
     background: "rgba(255,255,255,0.05)",
-    boxShadow: "0 0 20px rgba(0,0,0,0.3)",
-    position: "relative",
-    width: "320px",
   },
 
-  shopBtn: {
+  shop: {
     position: "absolute",
-    top: "10px",
-    left: "10px",
-    padding: "8px 12px",
-    borderRadius: "10px",
+    top: 10,
+    left: 10,
+    padding: "6px 10px",
+    borderRadius: 10,
     border: "none",
     cursor: "pointer",
-    background: "#ffcc00",
-    fontWeight: "bold",
-    color: "black",
+  },
+
+  balance: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    fontSize: 16,
   },
 
   back: {
     position: "absolute",
-    top: "10px",
-    left: "10px",
-    fontSize: "20px",
-    border: "none",
+    top: 10,
+    left: 10,
+    fontSize: 22,
     background: "transparent",
+    border: "none",
     color: "white",
     cursor: "pointer",
   },
 
   score: {
-    fontSize: "28px",
-    margin: "20px 0",
+    fontSize: 40,
+    marginBottom: 20,
   },
 
   coin: {
-    fontSize: "60px",
-    padding: "20px",
-    borderRadius: "50%",
-    cursor: "pointer",
+    fontSize: 60,
     border: "none",
     background: "transparent",
+    cursor: "pointer",
   },
 
-  button: {
-    marginTop: "15px",
-    padding: "10px 20px",
-    borderRadius: "10px",
+  btn: {
+    display: "block",
+    width: "100%",
+    margin: "10px 0",
+    padding: 10,
+    borderRadius: 10,
     border: "none",
     cursor: "pointer",
   },
