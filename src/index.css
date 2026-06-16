@@ -1,29 +1,26 @@
 body {
   margin: 0;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
 }
 
-button {
-  outline: none;
-  border: none;
+/* прибирає синій/фокус в Telegram */
+button,
+div,
+a {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none;
 }
 
-button:focus {
-  outline: none;
-  box-shadow: none;
+/* прибирає focus glow */
+button:focus,
+button:active {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-@keyframes floatUp {
-  0% {
-    opacity: 1;
-    transform: translate(-50%, 0);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -80px);
-  }
-}
-
-button:hover {
-  transform: scale(1.02);
+/* прибирає системний blue selection */
+* {
+  -webkit-tap-highlight-color: transparent;
 }
