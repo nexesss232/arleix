@@ -1,50 +1,60 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Coin from "./components/Coin";
 
 export default function App() {
   const [score, setScore] = useState(0);
+  const [mult, setMult] = useState(1);
   const [shopOpen, setShopOpen] = useState(false);
 
-  // 🚫 прибрати виділення і сині обводки
-  useEffect(() => {
-    document.body.style.userSelect = "none";
-    document.body.style.webkitTapHighlightColor = "transparent";
-  }, []);
-
-  // ➕ клік по монеті
   function addCoin() {
-    setScore((prev) => prev + 1);
+    setScore((prev) => prev + mult);
+  }
+
+  function buy(type) {
+    if (type === "250" && score >= 250) {
+      setScore(score - 250);
+      setMult(mult + 2);
+    }
+
+    if (type === "500" && score >= 500) {
+      setScore(score - 500);
+      setMult(mult + 1);
+    }
+
+    if (type === "1000" && score >= 1000) {
+      setScore(score - 1000);
+      setMult(mult + 3);
+    }
   }
 
   return (
     <div style={styles.page}>
-      {/* 🛒 кнопка магазину */}
-      <button onClick={() => setShopOpen(true)} style={styles.shopBtn}>
+      <button style={styles.shopBtn} onClick={() => setShopOpen(true)}>
         🛒
       </button>
 
-      {/* 💰 баланс */}
       <div style={styles.score}>{score}</div>
 
-      {/* 🪙 монета */}
       <Coin onClick={addCoin} />
 
-      {/* 🛍️ простий магазин (поки заглушка) */}
       {shopOpen && (
         <div style={styles.shop}>
-          <button onClick={() => setShopOpen(false)} style={styles.close}>
-            ← Назад
+          <button style={styles.close} onClick={() => setShopOpen(false)}>
+            ←
           </button>
 
           <h2>Магазин</h2>
-          <p>Тут будуть апгрейди</p>
 
-          <button
-            onClick={() => {
-              if (score >= 250) setScore(score - 250);
-            }}
-          >
-            +2 за клік (250)
+          <button onClick={() => buy("250")}>
+            +2 за клік — 250
+          </button>
+
+          <button onClick={() => buy("500")}>
+            +1 за клік — 500
+          </button>
+
+          <button onClick={() => buy("1000")}>
+            +3 за клік — 1000
           </button>
         </div>
       )}
@@ -59,7 +69,7 @@ const styles = {
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    background: "linear-gradient(135deg,#0f172a,#1e293b)",
+    background: "#111827",
     color: "white",
     position: "relative",
   },
@@ -67,13 +77,12 @@ const styles = {
   score: {
     fontSize: 48,
     marginBottom: 20,
-    fontWeight: "bold",
   },
 
   shopBtn: {
     position: "absolute",
-    top: 15,
-    left: 15,
+    top: 10,
+    left: 10,
     fontSize: 24,
     background: "transparent",
     border: "none",
@@ -92,13 +101,14 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
+    gap: 10,
   },
 
   close: {
     position: "absolute",
     top: 20,
     left: 20,
-    fontSize: 20,
+    fontSize: 24,
     background: "transparent",
     border: "none",
     color: "white",
